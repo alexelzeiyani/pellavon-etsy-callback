@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Pellavon House | Etsy Authorization</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+    body{margin:0;min-height:100vh;background:#101726;color:#f5f5f4;display:grid;place-items:center;padding:20px;box-sizing:border-box}
+    main{box-sizing:border-box;max-width:560px;width:100%;background:#1b2535;border:1px solid #394557;padding:28px;border-radius:18px}
+    .eyebrow{letter-spacing:.12em;font-size:12px;color:#a5b4fc;font-weight:700}
+    h1{font-size:26px;line-height:1.2;margin:10px 0 12px}
+    p{color:#cbd5e1;line-height:1.6}
+    .notice{background:#233246;border:1px solid #526077;padding:12px 14px;border-radius:9px;font-size:14px}
+    #result{display:none}
+    label{display:block;margin:18px 0 6px;font-size:13px;color:#b9c6d9}
+    textarea{box-sizing:border-box;width:100%;min-height:76px;resize:vertical;background:#101826;border:1px solid #66768d;border-radius:9px;color:#f8fafc;padding:12px;word-break:break-all}
+    button{padding:12px 16px;border:0;border-radius:9px;background:#d6bd85;color:#1a1d24;font-size:16px;font-weight:700;margin-top:14px;cursor:pointer}
+    button:focus-visible{outline:3px solid white;outline-offset:2px}
+    .muted{font-size:13px}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">PELLAVON HOUSE · ETSY OAUTH</div>
+    <h1 id="heading">Authorization callback ready</h1>
+    <p id="status">This page is ready to receive an authorization response from Etsy. No request data is sent to another service by this page.</p>
+    <section id="result">
+      <label for="authCode">One-time authorization code</label>
+      <textarea id="authCode" readonly spellcheck="false"></textarea>
+      <button id="copyCode" type="button">Copy code</button>
+      <label for="returnedState">Returned state (for verification)</label>
+      <textarea id="returnedState" readonly spellcheck="false"></textarea>
+      <button id="copyState" type="button">Copy state</button>
+      <p id="feedback" class="muted" aria-live="polite"></p>
+      <p class="notice"><strong>Keep this code private.</strong> Paste it only into your own Termux authentication script. Do not send screenshots, codes, or tokens in chat.</p>
+    </section>
+    <p class="muted">The callback query is removed from your browser address bar after the page reads it. Etsy still requires the Termux script to verify the returned state and PKCE proof.</p>
+  </main>
+<script>
+(function(){
+  'use strict';
+  const qs = new URLSearchParams(location.search);
+  const code = qs.get('code');
+  const state = qs.get('state') || '';
+  const error = qs.get('error');
+  const errorDescription = qs.get('error_description');
+  if (location.search) history.replaceState(null,'',location.pathname + location.hash);
+  if (error) {
+    document.getElementById('heading').textContent = 'Etsy authorization was not completed';
+    document.getElementById('status').textContent = 'Etsy returned: '+ error + (errorDescription ? ' — ' + errorDescription : '');
+    return;
+  }
+  if (!code) return;
+  document.getElementById('heading').textContent = 'Authorization code received';
+  document.getElementById('status').textContent = 'Copy the one-time code and paste it only into your local Termux script. The script must also verify the state value.';
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('authCode').value = code;
+  document.getElementById('returnedState').value = state;
+  document.getElementById('copyState').addEventListener('click', async function(){
+    try {
+      await navigator.clipboard.writeText(state);
+      document.getElementById('feedback').textContent = 'State copied. The Termux script must verify it matches the pending authorization request.';
+    } catch(e) {
+      document.getElementById('returnedState').focus();
+      document.getElementById('returnedState').select();
+      document.getElementById('feedback').textContent = 'Automatic copy unavailable. Select and copy the state above manually.';
+    }
+  });
+  document.getElementById('copyCode').addEventListener('click', async function(){
+    try {
+      await navigator.clipboard.writeText(code);
+      document.getElementById('feedback').textContent = 'Copied. Open Termux and paste the code when prompted.';
+    } catch(e) {
+      document.getElementById('authCode').focus();
+      document.getElementById('authCode').select();
+      document.getElementById('feedback').textContent = 'Automatic copy unavailable. Select and copy the code above manually.';
+    }
+  });
+})();
+</script>
+</body>
+</html>
